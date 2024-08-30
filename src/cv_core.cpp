@@ -228,12 +228,16 @@ namespace pcv
         {
             for (int j = 0; j < temp.cols; j++)
             {
-                if (temp.at<float>(i, j) <= Th1)
-                    temp.at<float>(i, j) = temp.at<float>(i, j) * Goal1 / Th1;
-                else if (temp.at<float>(i, j) > Th1 && temp.at<float>(i, j) <= Th2)
-                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1;
-                else
-                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th2) * (255 - Goal2) / (255 - Th2) + Goal2;
+                for (int c = 0; c < 3; c++)
+                {
+                    float &pixel = temp.at<cv::Vec3f>(i, j)[c];
+                    if (pixel <= Th1)
+                        pixel = pixel * Goal1 / Th1;
+                    else if (pixel > Th1 && pixel <= Th2)
+                        pixel = (pixel - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1;
+                    else
+                        pixel = (pixel - Th2) * (255 - Goal2) / (255 - Th2) + Goal2;
+                }
             }
         }
 
