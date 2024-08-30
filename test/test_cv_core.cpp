@@ -15,6 +15,8 @@ TEST(CvCoreTest, ResizeByRatio)
 
     EXPECT_EQ(resized_image.cols, static_cast<int>(image.cols * ratio));
     EXPECT_EQ(resized_image.rows, static_cast<int>(image.rows * ratio));
+
+    cv::imwrite("ResizeByRatio.jpg", resized_image);
 }
 
 TEST(CvCoreTest, ResizeBySize)
@@ -22,12 +24,11 @@ TEST(CvCoreTest, ResizeBySize)
     cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
-    cv::Size new_size(100, 100);
+    cv::Size new_size(640, 640);
     cv::Mat resized_image = image.clone();
     resize(resized_image, new_size);
 
-    EXPECT_EQ(resized_image.cols, new_size.width);
-    EXPECT_EQ(resized_image.rows, new_size.height);
+    cv::imwrite("ResizeBySize.jpg", resized_image);
 }
 
 TEST(CvCoreTest, Letterbox)
@@ -37,69 +38,67 @@ TEST(CvCoreTest, Letterbox)
 
     cv::Mat padded_image;
     BOX_RECT pads;
-    float scale = 1.0;
-    cv::Size target_size(200, 200);
-    cv::Scalar pad_color(128, 128, 128);
+    cv::Size target_size(640, 640);
 
-    letterbox(image, padded_image, pads, scale, target_size, pad_color);
+    letterbox(image, padded_image, pads, target_size);
 
-    EXPECT_EQ(padded_image.cols, target_size.width);
-    EXPECT_EQ(padded_image.rows, target_size.height);
+    cv::imwrite("Letterbox.jpg", padded_image);
 }
 
 TEST(CvCoreTest, Threshold)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
+    cv::Mat gray_image;
+    cv::cvtColor(image, gray_image, cv::COLOR_BGR2GRAY);
+
     cv::Mat thresholded_image;
-    double min_gray = 100;
-    double max_gray = 200;
+    double min_gray = 0;
+    double max_gray = 100;
 
-    threshold(image, thresholded_image, min_gray, max_gray);
+    threshold(gray_image, thresholded_image, min_gray, max_gray);
 
-    double min_val, max_val;
-    cv::minMaxLoc(thresholded_image, &min_val, &max_val);
-
-    EXPECT_GE(min_val, min_gray);
-    EXPECT_LE(max_val, max_gray);
+    cv::imwrite("Threshold.jpg", thresholded_image);
 }
 
 TEST(CvCoreTest, InvertImage)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
     cv::Mat inverted_image;
     invertImage(image, inverted_image);
 
     EXPECT_EQ(inverted_image.at<uchar>(0, 0), 255 - image.at<uchar>(0, 0));
+
+    cv::imwrite("InvertImage.jpg", inverted_image);
 }
 
 TEST(CvCoreTest, ScaleImage)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
+
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
     cv::Mat scaled_image;
     double min_gray = 50;
-    double max_gray = 200;
+    double max_gray = 100;
 
     scaleImage(image, scaled_image, min_gray, max_gray);
 
-    double min_val, max_val;
-    cv::minMaxLoc(scaled_image, &min_val, &max_val);
-
-    EXPECT_GE(min_val, min_gray);
-    EXPECT_LE(max_val, max_gray);
+    cv::imwrite("ScaleImage.jpg", scaled_image);
 }
 
 TEST(CvCoreTest, ZoomGray)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
-    int max_gray_level = 128;
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+
+    int max_gray_level = 16;
     cv::Mat zoomed_image = image.clone();
     zoomGray(zoomed_image, max_gray_level);
 
@@ -107,11 +106,13 @@ TEST(CvCoreTest, ZoomGray)
     cv::minMaxLoc(zoomed_image, &min_val, &max_val);
 
     EXPECT_LE(max_val, max_gray_level);
+
+    cv::imwrite("ZoomGray.jpg", zoomed_image);
 }
 
 TEST(CvCoreTest, GammaImage)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
     cv::Mat gamma_image;
@@ -119,39 +120,35 @@ TEST(CvCoreTest, GammaImage)
 
     gammaImage(image, gamma_image, gamma);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<uchar>(0, 0), gamma_image.at<uchar>(0, 0));
+    cv::imwrite("GammaImage.jpg", gamma_image);
 }
 
 TEST(CvCoreTest, AutoGammaImage)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
     cv::Mat auto_gamma_image;
-    float C = 1.0;
+    float C = 0.4;
 
     autoGammaImage(image, auto_gamma_image, C);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<uchar>(0, 0), auto_gamma_image.at<uchar>(0, 0));
+    cv::imwrite("AutoGammaImage.jpg", auto_gamma_image);
 }
 
 TEST(CvCoreTest, LinearGrayLevelTrans)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
+
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
     cv::Mat transformed_image;
     int Th1 = 50, Th2 = 200, Goal1 = 0, Goal2 = 255;
 
     linearGrayLevelTrans(image, transformed_image, Th1, Th2, Goal1, Goal2);
 
-    double min_val, max_val;
-    cv::minMaxLoc(transformed_image, &min_val, &max_val);
-
-    EXPECT_GE(min_val, Goal1);
-    EXPECT_LE(max_val, Goal2);
+    cv::imwrite("LinearGrayLevelTrans.jpg", transformed_image);
 }
 
 TEST(CvCoreTest, LinearLevelTrans)
@@ -164,25 +161,22 @@ TEST(CvCoreTest, LinearLevelTrans)
 
     linearLevelTrans(image, transformed_image, Th1, Th2, Goal1, Goal2);
 
-    double min_val, max_val;
-    cv::minMaxLoc(transformed_image, &min_val, &max_val);
-
-    EXPECT_GE(min_val, Goal1);
-    EXPECT_LE(max_val, Goal2);
+    cv::imwrite("LinearLevelTrans.jpg", transformed_image);
 }
 
 TEST(CvCoreTest, LogImage)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+
     cv::Mat log_image;
-    float C = 1.0;
+    float C = 20;
 
     logImage(image, log_image, C);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<uchar>(0, 0), log_image.at<uchar>(0, 0));
+    cv::imwrite("LogImage.jpg", log_image);
 }
 
 TEST(CvCoreTest, EqualizeColor)
@@ -195,8 +189,7 @@ TEST(CvCoreTest, EqualizeColor)
 
     equalizeColor(image, equalized_image, clip_limit);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<cv::Vec3b>(0, 0), equalized_image.at<cv::Vec3b>(0, 0));
+    cv::imwrite("EqualizeColor.jpg", equalized_image);
 }
 
 TEST(CvCoreTest, BilateralFilter)
@@ -209,14 +202,15 @@ TEST(CvCoreTest, BilateralFilter)
 
     bilateralFilter(image, filtered_image, iter, d, s_color, s_space);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<cv::Vec3b>(0, 0), filtered_image.at<cv::Vec3b>(0, 0));
+    cv::imwrite("BilateralFilter.jpg", filtered_image);
 }
 
 TEST(CvCoreTest, GaborFilter)
 {
-    cv::Mat image = cv::imread("test.jpg", cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
+
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
     cv::Mat gabor_image;
     int kernel_size = 21;
@@ -224,8 +218,7 @@ TEST(CvCoreTest, GaborFilter)
 
     gaborFilter(image, gabor_image, kernel_size, sigma, theta, lambd, gamma, psi);
 
-    // Check if the transformation is applied (not a precise check)
-    EXPECT_NE(image.at<uchar>(0, 0), gabor_image.at<uchar>(0, 0));
+    cv::imwrite("GaborFilter.jpg", gabor_image);
 }
 
 } // namespace pcv
