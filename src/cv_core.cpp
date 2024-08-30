@@ -26,13 +26,11 @@ namespace pcv
         double aspect_ratio_target = static_cast<double>(Size.width) / Size.height;
         if (aspect_ratio_input >= aspect_ratio_target)
         {
-            // 宽度优先调整
             int new_height = static_cast<int>(height * static_cast<double>(Size.width) / width);
             cv::resize(InOutMat, InOutMat, cv::Size(Size.width, new_height));
         }
         else
         {
-            // 高度优先调整
             int new_width = static_cast<int>(width * static_cast<double>(Size.height) / height);
             cv::resize(InOutMat, InOutMat, cv::Size(new_width, Size.height));
         }
@@ -45,11 +43,15 @@ namespace pcv
     /// @param target_size 目标大小
     /// @param pad_color 填充颜色
     void letterbox(const cv::Mat &image, cv::Mat &padded_image, BOX_RECT &pads,
-                   const float scale, const cv::Size &target_size,
+                   const cv::Size &target_size,
                    const cv::Scalar &pad_color)
     {
+        float scale_w = (float)target_size.width / image.cols;
+        float scale_h = (float)target_size.height / image.rows;
+        float min_scale = std::min(scale_w, scale_h);
+
         cv::Mat resized_image;
-        cv::resize(image, resized_image, cv::Size(), scale, scale);
+        cv::resize(image, resized_image, cv::Size(), min_scale, min_scale);
 
         // 计算填充大小
         int pad_width = target_size.width - resized_image.cols;
@@ -136,13 +138,12 @@ namespace pcv
     }
 
     /// @brief 伽马校正
-    /// @param GrayInMat 输入灰度图像
+    /// @param InMat 输入图像
     /// @param OutMat 输出图像
     /// @param Gamma 伽马值
-    void gammaImage(const cv::Mat &GrayInMat, cv::Mat &OutMat, float Gamma)
+    void gammaImage(const cv::Mat &InMat, cv::Mat &OutMat, float Gamma)
     {
-        assert(!GrayInMat.empty() && "Input image is empty");
-        assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
+        assert(!InMat.empty() && "Input image is empty");
 
         // 创建查找表
         std::array<uchar, 256> lut;
@@ -153,7 +154,7 @@ namespace pcv
 
         // 应用查找表
         cv::Mat Lut(1, 256, CV_8UC1, lut.data());
-        cv::LUT(GrayInMat, Lut, OutMat);
+        cv::LUT(InMat, Lut, OutMat);
     }
 
     /// @brief 自动伽马校正
@@ -190,16 +191,18 @@ namespace pcv
         cv::Mat temp;
         GrayInMat.convertTo(temp, CV_32F);
 
-        // 创建掩码
-        cv::Mat mask1 = (temp <= Th1);
-        cv::Mat mask2 = (temp > Th1) & (temp <= Th2);
-        cv::Mat mask3 = (temp > Th2);
-
-        // 应用掩码进行计算
-        temp.setTo(temp * Goal1 / Th1, mask1);
-        temp.setTo((temp - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1, mask2);
-        temp.setTo((temp - Th2) * (255 - Goal2) / (255 - Th2) + Goal2, mask3);
-
+        for (int i = 0; i < temp.rows; i++)
+        {
+            for (int j = 0; j < temp.cols; j++)
+            {
+                if (temp.at<float>(i, j) <= Th1)
+                    temp.at<float>(i, j) = temp.at<float>(i, j) * Goal1 / Th1;
+                else if (temp.at<float>(i, j) > Th1 && temp.at<float>(i, j) <= Th2)
+                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1;
+                else
+                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th2) * (255 - Goal2) / (255 - Th2) + Goal2;
+            }
+        }
         temp.convertTo(OutMat, CV_8U);
     }
 
@@ -221,15 +224,18 @@ namespace pcv
         cv::Mat temp;
         InMat.convertTo(temp, CV_32F);
 
-        // 创建掩码
-        cv::Mat mask1 = (temp <= Th1);
-        cv::Mat mask2 = (temp > Th1) & (temp <= Th2);
-        cv::Mat mask3 = (temp > Th2);
-
-        // 应用掩码进行计算
-        temp.setTo(temp * Goal1 / Th1, mask1);
-        temp.setTo((temp - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1, mask2);
-        temp.setTo((temp - Th2) * (255 - Goal2) / (255 - Th2) + Goal2, mask3);
+        for (int i = 0; i < temp.rows; i++)
+        {
+            for (int j = 0; j < temp.cols; j++)
+            {
+                if (temp.at<float>(i, j) <= Th1)
+                    temp.at<float>(i, j) = temp.at<float>(i, j) * Goal1 / Th1;
+                else if (temp.at<float>(i, j) > Th1 && temp.at<float>(i, j) <= Th2)
+                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th1) * (Goal2 - Goal1) / (Th2 - Th1) + Goal1;
+                else
+                    temp.at<float>(i, j) = (temp.at<float>(i, j) - Th2) * (255 - Goal2) / (255 - Th2) + Goal2;
+            }
+        }
 
         temp.convertTo(OutMat, CV_8U);
     }
@@ -289,22 +295,17 @@ namespace pcv
     {
         assert(!InMat.empty() && "Input image is empty");
 
-        if (Iter <= 0)
+        cv::Mat bilateral, bilateral_temp;
+        cv::bilateralFilter(InMat, bilateral, D, SColor, SSpace);
+        bilateral_temp = bilateral.clone();
+        bilateral.release();
+        for (int i = 0; i < Iter - 1; i++)
         {
-            OutMat = InMat.clone();
-            return;
+            cv::bilateralFilter(bilateral_temp, bilateral, D, SColor, SSpace);
+            bilateral_temp = bilateral.clone();
+            bilateral.release();
         }
-
-        cv::Mat current = InMat.clone();
-        cv::Mat temp;
-
-        for (int i = 0; i < Iter; i++)
-        {
-            cv::bilateralFilter(current, temp, D, SColor, SSpace);
-            current = temp;
-        }
-
-        OutMat = current;
+        OutMat = bilateral_temp.clone();
     }
 
     /// @brief Gabor 滤波
@@ -322,7 +323,7 @@ namespace pcv
     {
         assert(!GrayInMat.empty() && "Input image is empty");
         assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
-        
+
         cv::Mat temp;
         GrayInMat.convertTo(temp, CV_32F);
         cv::Mat kernel = cv::getGaborKernel(cv::Size(KernelSize, KernelSize), Sigma, Theta, Lambd, Gamma, Psi, CV_32F);

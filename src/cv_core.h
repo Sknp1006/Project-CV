@@ -19,10 +19,10 @@ void resize(cv::Mat &InOutMat, double Ratio);
 void resize(cv::Mat &InOutMat, const cv::Size& Size);
 
 void letterbox(const cv::Mat &image, cv::Mat &padded_image, BOX_RECT &pads, 
-                const float scale, const cv::Size &target_size, 
+                const cv::Size &target_size, 
                 const cv::Scalar &pad_color = cv::Scalar(128, 128, 128));
 
-void threshold(const cv::Mat &InMat, cv::Mat &OutMat, double MinGray, double MaxGray);
+void threshold(const cv::Mat &GrayInMat, cv::Mat &OutMat, double MinGray, double MaxGray);
 
 void invertImage(const cv::Mat &InMat, cv::Mat &OutMat);
 
@@ -30,7 +30,7 @@ void scaleImage(const cv::Mat &GrayInMat, cv::Mat &OutMat, double MinGray, doubl
 
 void zoomGray(cv::Mat &GrayInOutMat, int MaxGrayLevel);
 
-void gammaImage(const cv::Mat &GrayInMat, cv::Mat &OutMat, float Gamma);
+void gammaImage(const cv::Mat &InMat, cv::Mat &OutMat, float Gamma);
 
 void autoGammaImage(const cv::Mat &GrayInMat, cv::Mat &OutMat, float C);
 
