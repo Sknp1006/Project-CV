@@ -336,4 +336,35 @@ namespace pcv
         cv::convertScaleAbs(OutMat, OutMat, 255);               // 映射到【0~255】8U
     }
 
+    /// @brief LBP 纹理特征提取
+    /// @param GrayInMat 输入灰度图像
+    /// @param OutMat 输出图像
+    void LBP(const cv::Mat &GrayInMat, cv::Mat &OutMat)
+    {
+        assert(!GrayInMat.empty() && "Input image is empty");
+        assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
+        
+        cv::Mat temp = cv::Mat::zeros(GrayInMat.size(), GrayInMat.type());
+        cv::Mat InMat;
+        cv::copyMakeBorder(GrayInMat, InMat, 0, 2, 0, 2, cv::BORDER_CONSTANT, cv::Scalar::all(0));
+        for (int i = 1; i < InMat.rows - 1; i++)
+        {
+            for (int j = 1; j < InMat.cols - 1; j++)
+            {
+                uchar center = InMat.at<uchar>(i, j);
+                uchar code = 0;
+                code |= (InMat.at<uchar>(i - 1, j - 1) >= center) << 7;
+                code |= (InMat.at<uchar>(i - 1, j) >= center) << 6;
+                code |= (InMat.at<uchar>(i - 1, j + 1) >= center) << 5;
+                code |= (InMat.at<uchar>(i, j + 1) >= center) << 4;
+                code |= (InMat.at<uchar>(i + 1, j + 1) >= center) << 3;
+                code |= (InMat.at<uchar>(i + 1, j) >= center) << 2;
+                code |= (InMat.at<uchar>(i + 1, j - 1) >= center) << 1;
+                code |= (InMat.at<uchar>(i, j - 1) >= center) << 0;
+                temp.at<uchar>(i - 1, j - 1) = code;
+            }
+        }
+        OutMat = temp.clone();
+    }
+
 } // namespace pcv

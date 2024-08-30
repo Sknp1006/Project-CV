@@ -47,6 +47,8 @@ void bilateralFilter(const cv::Mat& InMat, cv::Mat& OutMat, int Iter, int D, int
 void gaborFilter(const cv::Mat &GrayInMat, cv::Mat &OutMat, int KernelSize, 
                     double Sigma, double Theta, double Lambd, 
                     double Gamma, double Psi);
+
+void LBP(const cv::Mat &GrayInMat, cv::Mat &OutMat);
 }; // namespace pcv
 
 #endif // H_CV_CORE

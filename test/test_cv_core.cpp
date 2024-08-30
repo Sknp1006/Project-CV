@@ -221,6 +221,19 @@ TEST(CvCoreTest, GaborFilter)
     cv::imwrite("GaborFilter.jpg", gabor_image);
 }
 
+TEST(CvCoreTest, LBP)
+{
+    cv::Mat image = cv::imread("test.jpg");
+    ASSERT_FALSE(image.empty());
+
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+
+    cv::Mat lbp_image;
+    LBP(image, lbp_image);
+
+    cv::imwrite("LBP.jpg", lbp_image);
+}
+
 } // namespace pcv
 
 int main(int argc, char **argv)
