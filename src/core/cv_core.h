@@ -1,5 +1,5 @@
-#ifndef H_CV_CORE
-#define H_CV_CORE
+#ifndef H_PCV_CORE
+#define H_PCV_CORE
 
 #include <opencv2/opencv.hpp>
 
@@ -51,4 +51,4 @@ void gaborFilter(const cv::Mat &GrayInMat, cv::Mat &OutMat, int KernelSize,
 void LBP(const cv::Mat &GrayInMat, cv::Mat &OutMat);
 }; // namespace pcv
 
-#endif // H_CV_CORE
+#endif // H_PCV_CORE
