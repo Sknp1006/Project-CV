@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "cv_core.h"
+#include "core/cv_core.h"
 
 namespace pcv
 {
