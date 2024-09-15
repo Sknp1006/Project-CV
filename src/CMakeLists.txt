@@ -22,6 +22,7 @@ else()
 endif()
 
 # include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${3RD_PARTY_INCLUDE_DIRS})
 
 # link libraries
