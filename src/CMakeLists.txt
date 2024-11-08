@@ -5,6 +5,8 @@ message(STATUS "BUILD_STATIC:  ${BUILD_STATIC}")
 
 # 3rdparty
 find_package(OpenCV 4 REQUIRED)
+list(APPEND 3RD_PARTY_INCLUDE_DIRS ${OpenCV_INCLUDE_DIRS})
+list(APPEND 3RD_PARTY_LIBS ${OpenCV_LIBS})
 
 # source files
 file(GLOB_RECURSE CV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
@@ -20,14 +22,11 @@ else()
 endif()
 
 # include directories
-target_include_directories(${PROJECT_NAME} PUBLIC 
-                                ${Opencv_INCLUDE_DIRS}
-                                ${3RD_PARTY_DIR}/eigen
-                                ${3RD_PARTY_DIR}/spdlog/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${3RD_PARTY_INCLUDE_DIRS})
 
 # link libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC 
-                            ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${3RD_PARTY_LIBS})
 
 # install target
 install (TARGETS ${PROJECT_NAME} DESTINATION ${PROJECT_NAME}/lib)

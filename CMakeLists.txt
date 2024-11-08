@@ -31,6 +31,7 @@ elseif(BUILD_TYPE STREQUAL "Release")
 else()
     message(FATAL_ERROR "BUILD_TYPE must be Debug or Release")
 endif()
+set(CMAKE_BUILD_TYPE ${BUILD_TYPE})
 message("BUILD_TYPE: " ${BUILD_TYPE})
 
 # 3rdparty
@@ -38,4 +39,5 @@ include(3rdparty/3rdparty.cmake)
 
 # my project
 add_subdirectory(src)
+enable_testing()  # 启用测试
 add_subdirectory(test)
