@@ -39,4 +39,5 @@ include(3rdparty/3rdparty.cmake)
 
 # my project
 add_subdirectory(src)
+enable_testing()  # 启用测试
 add_subdirectory(test)

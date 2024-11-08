@@ -34,5 +34,25 @@ target_include_directories(test_utils PRIVATE ${CMAKE_SOURCE_DIR}/utils ${3RD_PA
 target_link_libraries(test_utils PRIVATE gtest gtest_main)
 install(TARGETS test_utils DESTINATION ${PROJECT_NAME}/bin)
 
+# cv_glcm
+add_executable(test_cv_glcm test_cv_glcm.cpp)
+target_include_directories(test_cv_glcm PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(test_cv_glcm PRIVATE procv gtest gtest_main)
+install(TARGETS test_cv_glcm DESTINATION ${PROJECT_NAME}/bin)
+
 # imgs
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/imgs/test.jpg DESTINATION ${PROJECT_NAME}/bin)
+
+
+add_test(NAME test_cv_core COMMAND test_cv_core)
+set_tests_properties(test_cv_core PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
+add_test(NAME test_cv_template COMMAND test_cv_template)
+set_tests_properties(test_cv_template PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
+add_test(NAME test_cv_face COMMAND test_cv_face face_detection_yunet_2023mar.onnx test.jpg)
+set_tests_properties(test_cv_face PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
+add_test(NAME test_cv_region COMMAND test_cv_region)
+set_tests_properties(test_cv_region PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
+add_test(NAME test_utils COMMAND test_utils)
+set_tests_properties(test_utils PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
+add_test(NAME test_cv_glcm COMMAND test_cv_glcm)
+set_tests_properties(test_cv_glcm PROPERTIES WORKING_DIRECTORY ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}/bin)
