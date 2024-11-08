@@ -15,7 +15,7 @@ namespace pcv::GLCM
         cv::minMaxLoc(GrayInMat, &minVal, &maxVal);
         if (maxVal >= (int)GrayLevel)
         {
-            zoomGray(GrayInMat, (int)GrayLevel, false);  // Scale to [0, GrayLevel) range
+            zoomGray(GrayInMat, (int)GrayLevel, false); // Scale to [0, GrayLevel) range
         }
 
         // Step 3: Initialize GLCM matrix
@@ -63,8 +63,8 @@ namespace pcv::GLCM
         GlcmMat /= cv::sum(GlcmMat)[0];
     }
     /// @brief Calculate GLCM data
-    /// @param GlcmMat 
-    /// @param GlcmData 
+    /// @param GlcmMat
+    /// @param GlcmData
     void calcGlcmData(const cv::Mat &GlcmMat, GLCMDATA &GlcmData)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -79,8 +79,8 @@ namespace pcv::GLCM
         GlcmData.AngularSecondMoment = calcEnergy(GlcmMat);
     }
     /// @brief Calculate the contrast of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcContrast(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -104,8 +104,8 @@ namespace pcv::GLCM
         return contrast;
     }
     /// @brief Calculate the entropy of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcEntropy(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -129,8 +129,8 @@ namespace pcv::GLCM
         return entropy;
     }
     /// @brief Calculate the homogeneity of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcHomogeneity(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -154,8 +154,8 @@ namespace pcv::GLCM
         return homogeneity;
     }
     /// @brief Calculate the correlation of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcCorrelation(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -164,12 +164,11 @@ namespace pcv::GLCM
         int height = GlcmMat.rows;
         int width = GlcmMat.cols;
 
-        // Correlation
-        // $$
-        // \text{Correlation} = \sum_{i,j} \frac{(ij) \, p(i, j) - \mu_i \mu_j}{\sigma_i \sigma_j}
-        // $$
+        // Initialize variables for correlation calculation
         float correlation = 0.0f;
         float mu_i = 0.0f, mu_j = 0.0f, sigma_i = 0.0f, sigma_j = 0.0f;
+
+        // Calculate means (mu_i and mu_j)
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
@@ -178,6 +177,8 @@ namespace pcv::GLCM
                 mu_j += j * GlcmMat.at<float>(i, j);
             }
         }
+
+        // Calculate variances (sigma_i^2 and sigma_j^2)
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
@@ -186,18 +187,27 @@ namespace pcv::GLCM
                 sigma_j += (j - mu_j) * (j - mu_j) * GlcmMat.at<float>(i, j);
             }
         }
+
+        // Ensure standard deviations are non-zero to avoid division by zero
+        sigma_i = std::sqrt(sigma_i);
+        sigma_j = std::sqrt(sigma_j);
+        if (sigma_i == 0.0f || sigma_j == 0.0f)
+            return 0.0f; // correlation is undefined if any variance is zero
+
+        // Calculate correlation
         for (int i = 0; i < height; i++)
         {
             for (int j = 0; j < width; j++)
             {
-                correlation += (i * j * GlcmMat.at<float>(i, j) - mu_i * mu_j) / (std::sqrt(sigma_i) * std::sqrt(sigma_j));
+                correlation += ((i - mu_i) * (j - mu_j) * GlcmMat.at<float>(i, j)) / (sigma_i * sigma_j);
             }
         }
+
         return correlation;
     }
     /// @brief Calculate the energy of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcEnergy(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -221,8 +231,8 @@ namespace pcv::GLCM
         return energy;
     }
     /// @brief Calculate the inverse difference moment of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcIDMoment(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
@@ -246,8 +256,8 @@ namespace pcv::GLCM
         return idmoment;
     }
     /// @brief Calculate the maximum probability of the GLCM matrix
-    /// @param GlcmMat 
-    /// @return 
+    /// @param GlcmMat
+    /// @return
     float calcMaxProbability(const cv::Mat &GlcmMat)
     {
         assert(!GlcmMat.empty() && "Input GLCM matrix is empty");
