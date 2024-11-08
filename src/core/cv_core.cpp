@@ -124,7 +124,7 @@ namespace pcv
         cv::LUT(GrayInMat, Lut, OutMat);
     }
 
-    /// @brief 灰度映射
+    /// @brief 灰度映射 (将灰度值映射到[0, MaxGrayLevel) 或 [0, MaxGrayLevel] 区间)
     /// @param GrayInOutMat 输入输出灰度图像
     /// @param MaxGrayLevel 最大灰度值
     /// @param IsClosed 是否封闭区间
@@ -134,13 +134,20 @@ namespace pcv
         assert(GrayInOutMat.type() == CV_8UC1 && "Input image must be a grayscale image");
         assert(MaxGrayLevel >= 1 && MaxGrayLevel <= 256 && "MaxGrayLevel must be in the range [1, 256]");
         GrayInOutMat.convertTo(GrayInOutMat, CV_32F);
+        double minVal, maxVal;
+        cv::minMaxLoc(GrayInOutMat, &minVal, &maxVal);
+        if (maxVal == 0)
+            maxVal = 1;
+        float scale = (MaxGrayLevel - (IsClosed ? 0.0f : 1.0f)) / static_cast<float>(maxVal);
         if (IsClosed)
         {
-            GrayInOutMat = ((MaxGrayLevel - 1.0f) / 255.0f * GrayInOutMat) + 1.0f;
+            // 封闭区间映射到 [0, MaxGrayLevel]
+            GrayInOutMat = cv::min(cv::max(GrayInOutMat * scale + 0.5f, 0.0f), static_cast<float>(MaxGrayLevel));
         }
         else
         {
-            GrayInOutMat = ((MaxGrayLevel - 1.0f) / 255.0f * GrayInOutMat);
+            // 非封闭区间映射到 [0, MaxGrayLevel - 1]
+            GrayInOutMat = cv::min(cv::max(GrayInOutMat * scale, 0.0f), MaxGrayLevel - 1.0f);
         }
         GrayInOutMat.convertTo(GrayInOutMat, CV_8U);
     }
