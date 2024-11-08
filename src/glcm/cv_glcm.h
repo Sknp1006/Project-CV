@@ -52,6 +52,7 @@ namespace pcv
 
             void print()
             {
+                printf("GLCM Type: %d   Gray Level: %d\n", (int)m_type, (int)m_grayLevel);
                 printf("MaxProbability: %.6f\n", MaxProbability);
                 printf("AngularSecondMoment: %.6f\n", AngularSecondMoment);
                 printf("Contrast: %.6f\n", Contrast);
