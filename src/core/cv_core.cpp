@@ -127,13 +127,21 @@ namespace pcv
     /// @brief 灰度映射
     /// @param GrayInOutMat 输入输出灰度图像
     /// @param MaxGrayLevel 最大灰度值
-    void zoomGray(cv::Mat &GrayInOutMat, int MaxGrayLevel)
+    /// @param IsClosed 是否封闭区间
+    void zoomGray(cv::Mat &GrayInOutMat, int MaxGrayLevel, bool IsClosed)
     {
         assert(!GrayInOutMat.empty() && "Input image is empty");
         assert(GrayInOutMat.type() == CV_8UC1 && "Input image must be a grayscale image");
         assert(MaxGrayLevel >= 1 && MaxGrayLevel <= 256 && "MaxGrayLevel must be in the range [1, 256]");
         GrayInOutMat.convertTo(GrayInOutMat, CV_32F);
-        GrayInOutMat = ((MaxGrayLevel - 1.0f) / 255.0f * GrayInOutMat) + 1.0f;
+        if (IsClosed)
+        {
+            GrayInOutMat = ((MaxGrayLevel - 1.0f) / 255.0f * GrayInOutMat) + 1.0f;
+        }
+        else
+        {
+            GrayInOutMat = ((MaxGrayLevel - 1.0f) / 255.0f * GrayInOutMat);
+        }
         GrayInOutMat.convertTo(GrayInOutMat, CV_8U);
     }
 
@@ -343,7 +351,7 @@ namespace pcv
     {
         assert(!GrayInMat.empty() && "Input image is empty");
         assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
-        
+
         cv::Mat temp = cv::Mat::zeros(GrayInMat.size(), GrayInMat.type());
         cv::Mat InMat;
         cv::copyMakeBorder(GrayInMat, InMat, 0, 2, 0, 2, cv::BORDER_CONSTANT, cv::Scalar::all(0));

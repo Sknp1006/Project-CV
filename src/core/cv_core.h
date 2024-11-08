@@ -28,7 +28,7 @@ void invertImage(const cv::Mat &InMat, cv::Mat &OutMat);
 
 void scaleImage(const cv::Mat &GrayInMat, cv::Mat &OutMat, double MinGray, double MaxGray);
 
-void zoomGray(cv::Mat &GrayInOutMat, int MaxGrayLevel);
+void zoomGray(cv::Mat &GrayInOutMat, int MaxGrayLevel, bool IsClosed = true);
 
 void gammaImage(const cv::Mat &InMat, cv::Mat &OutMat, float Gamma);
 
