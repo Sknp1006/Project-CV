@@ -96,7 +96,7 @@ namespace pcv
             OutMat = cv::Scalar(255) - InMat;
         }
     }
-    /// @brief 灰度缩放
+    /// @brief 灰度缩放 (将低于MinGray的灰度值设为0，高于MaxGray的灰度值设为255，中间部分映射到[0, 255])
     /// @param GrayInMat 输入灰度图像
     /// @param OutMat 输出图像
     /// @param MinGray 区间灰度下限
