@@ -128,6 +128,8 @@ TEST(CvCoreTest, AutoGammaImage)
     cv::Mat image = cv::imread("test.jpg");
     ASSERT_FALSE(image.empty());
 
+    cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+
     cv::Mat auto_gamma_image;
     float C = 0.4;
 
