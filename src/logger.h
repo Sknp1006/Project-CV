@@ -67,8 +67,10 @@ namespace commons
         inline static const std::string now_YYYYMMDDHHMMSS_SSS()
         {
             auto timestamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+            std::tm tm_buf{};
+            localtime_r(&timestamp, &tm_buf);
             std::stringstream ss;
-            ss << std::put_time(std::localtime(&timestamp), "%Y%m%d%H%M%S");
+            ss << std::put_time(&tm_buf, "%Y%m%d%H%M%S");
             std::string date = ss.str();
             return date;
         }
