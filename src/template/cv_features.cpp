@@ -1,4 +1,6 @@
 #include "cv_features.h"
+#include <algorithm>
+#include <spdlog/spdlog.h>
 
 namespace pcv
 {
@@ -54,23 +56,24 @@ namespace pcv
         std::vector<std::vector<cv::DMatch>> Matches;
         this->Matcher->knnMatch(ToMatch.Description, Matches, 2);
         GoodMatches.clear();
-        for (unsigned int i = 0; i < Matches.size(); ++i)
+        for (size_t i = 0; i < Matches.size(); ++i)
         {
-            if (Matches[i][0].distance < Threshold * Matches[i][1].distance)
+            if (Matches[i].size() >= 2 && Matches[i][0].distance < Threshold * Matches[i][1].distance)
                 GoodMatches.push_back(Matches[i][0]);
         }
+
+        // 按距离排序，保留最优匹配
+        std::sort(GoodMatches.begin(), GoodMatches.end(),
+            [](const cv::DMatch &a, const cv::DMatch &b) { return a.distance < b.distance; });
+
         std::vector<cv::Point2f> ToMatchPoints, TemplatePoints;
-        int GoodMatchesSize = 100;
-        if ((GoodMatches.size() > 4) && (GoodMatches.size() < GoodMatchesSize))
-        {
-            GoodMatchesSize = GoodMatches.size();
-        }
-        else if (GoodMatches.size() <= 4)
+        size_t GoodMatchesSize = std::min(GoodMatches.size(), static_cast<size_t>(100));
+        if (GoodMatchesSize <= 4)
         {
             PerspectiveMat = cv::Mat::ones(3, 3, CV_64F);
             return;
         }
-        for (unsigned int i = 0; i < GoodMatchesSize; i++)
+        for (size_t i = 0; i < GoodMatchesSize; i++)
         {
             ToMatchPoints.push_back(ToMatch.KeyPoints[GoodMatches[i].queryIdx].pt);
             TemplatePoints.push_back(Template.KeyPoints[GoodMatches[i].trainIdx].pt);
@@ -92,6 +95,7 @@ namespace pcv
         }
         catch (cv::Exception &e)
         {
+            spdlog::error("wrapPerspective failed: {}", e.what());
             return false;
         }
         return true;
