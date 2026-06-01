@@ -19,7 +19,14 @@ pcv::Region::Region(const cv::Mat &InMat, const cv::Point2f &Centroid)
     // this->m_region = InMat.clone();// ROI区域大小
     std::vector<cv::Vec4i> hierarchy; // 轮廓层级
     // cv::findContours(this->m_region, this->contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point()); // 计算区域轮廓
-    cv::findContours(InMat, this->m_contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE, cv::Point()); // 计算区域轮廓
+    // findContours 会修改输入图像，因此需要拷贝一份
+    cv::Mat inMatClone = InMat.clone();
+    cv::findContours(inMatClone, this->m_contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_NONE, cv::Point()); // 计算区域轮廓
+
+    if (this->m_contours.empty())
+    {
+        CV_Error(cv::Error::StsBadArg, "No contours found in input region image.");
+    }
 
     if ((Centroid.x == 0.0f) && (Centroid.y == 0.0f))
     {
@@ -198,7 +205,14 @@ void pcv::calcCentroid(const std::vector<std::vector<cv::Point>> &Contours, std:
     std::vector<cv::Point2f> mc(Contours.size());
     for (int i = 0; i < Contours.size(); i++)
     {
-        mc[i] = cv::Point2f(static_cast<float>(mu[i].m10 / mu[i].m00), static_cast<float>(mu[i].m01 / mu[i].m00)); // 质心的 X,Y 坐标：(m10/m00, m01/m00)
+        if (std::abs(mu[i].m00) < 1e-10)
+        {
+            mc[i] = cv::Point2f(0, 0); // 退化轮廓，质心设为原点
+        }
+        else
+        {
+            mc[i] = cv::Point2f(static_cast<float>(mu[i].m10 / mu[i].m00), static_cast<float>(mu[i].m01 / mu[i].m00)); // 质心的 X,Y 坐标：(m10/m00, m01/m00)
+        }
     }
     Centroid = std::move(mc);
 }

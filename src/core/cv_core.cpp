@@ -46,6 +46,9 @@ namespace pcv
                    const cv::Size &target_size,
                    const cv::Scalar &pad_color)
     {
+        assert(!image.empty() && "Input image is empty");
+        assert(target_size.width > 0 && target_size.height > 0 && "Target size must be positive");
+
         float scale_w = (float)target_size.width / image.cols;
         float scale_h = (float)target_size.height / image.rows;
         float min_scale = std::min(scale_w, scale_h);
@@ -87,11 +90,12 @@ namespace pcv
     /// @param OutMat 输出图像
     void invertImage(const cv::Mat &InMat, cv::Mat &OutMat)
     {
+        assert((InMat.channels() == 1 || InMat.channels() == 3) && "Only 1 or 3 channel images supported");
         if (InMat.channels() == 3)
         {
             OutMat = cv::Scalar(255, 255, 255) - InMat;
         }
-        else if (InMat.channels() == 1)
+        else
         {
             OutMat = cv::Scalar(255) - InMat;
         }
@@ -107,6 +111,7 @@ namespace pcv
         assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
         assert(MinGray >= 0 && MinGray <= 255 && "MinGray must be in the range [0, 255]");
         assert(MaxGray >= 0 && MaxGray <= 255 && "MaxGray must be in the range [0, 255]");
+        assert(MaxGray > MinGray && "MaxGray must be strictly greater than MinGray");
 
         // 根据公式计算
         double mult = 255.0 / (MaxGray - MinGray);
@@ -159,6 +164,7 @@ namespace pcv
     void gammaImage(const cv::Mat &InMat, cv::Mat &OutMat, float Gamma)
     {
         assert(!InMat.empty() && "Input image is empty");
+        assert(Gamma > 0 && "Gamma must be strictly positive");
 
         // 创建查找表
         std::array<uchar, 256> lut;
@@ -180,10 +186,16 @@ namespace pcv
     {
         assert(!GrayInMat.empty() && "Input image is empty");
         assert(GrayInMat.type() == CV_8UC1 && "Input image must be a grayscale image");
-        assert(C >= 0 && C <= 1 && "C must be in the range [0, 1]");
+        assert(C > 0 && C < 1 && "C must be in the open interval (0, 1)");
 
         auto meanGray = cv::mean(GrayInMat)[0];
-        float gamma_val = static_cast<float>(log10(1 - C) / log10(1 - meanGray / 255.0f)); // 自动gamma参数
+        // 全黑或全白图像无法自动计算 gamma，直接拷贝输出
+        if (meanGray <= 1e-6 || meanGray >= 255.0 - 1e-6)
+        {
+            GrayInMat.copyTo(OutMat);
+            return;
+        }
+        float gamma_val = static_cast<float>(log10(1.0 - C) / log10(1.0 - meanGray / 255.0));
         gammaImage(GrayInMat, OutMat, gamma_val);
     }
 
@@ -202,6 +214,9 @@ namespace pcv
         assert(Th2 >= 0 && Th2 <= 255 && "Th2 must be in the range [0, 255]");
         assert(Goal1 >= 0 && Goal1 <= 255 && "Goal1 must be in the range [0, 255]");
         assert(Goal2 >= 0 && Goal2 <= 255 && "Goal2 must be in the range [0, 255]");
+        assert(Th1 > 0 && "Th1 must be > 0 to avoid division by zero");
+        assert(Th2 > Th1 && "Th2 must be greater than Th1");
+        assert(Th2 < 255 && "Th2 must be less than 255");
 
         cv::Mat temp;
         GrayInMat.convertTo(temp, CV_32F);
@@ -313,18 +328,17 @@ namespace pcv
     void bilateralFilter(const cv::Mat &InMat, cv::Mat &OutMat, int Iter, int D, int SColor, int SSpace)
     {
         assert(!InMat.empty() && "Input image is empty");
+        assert(Iter > 0 && "Iteration count must be positive");
 
-        cv::Mat bilateral, bilateral_temp;
-        cv::bilateralFilter(InMat, bilateral, D, SColor, SSpace);
-        bilateral_temp = bilateral.clone();
-        bilateral.release();
-        for (int i = 0; i < Iter - 1; i++)
+        cv::Mat current;
+        InMat.copyTo(current);
+        cv::Mat next;
+        for (int i = 0; i < Iter; i++)
         {
-            cv::bilateralFilter(bilateral_temp, bilateral, D, SColor, SSpace);
-            bilateral_temp = bilateral.clone();
-            bilateral.release();
+            cv::bilateralFilter(current, next, D, SColor, SSpace);
+            std::swap(current, next);
         }
-        OutMat = bilateral_temp.clone();
+        OutMat = std::move(current);
     }
 
     /// @brief Gabor 滤波
@@ -379,7 +393,7 @@ namespace pcv
                 temp.at<uchar>(i - 1, j - 1) = code;
             }
         }
-        OutMat = temp.clone();
+        OutMat = std::move(temp);
     }
 
 } // namespace pcv

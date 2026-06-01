@@ -24,8 +24,8 @@ namespace pcv
         double getMinBoundingRectArea();      // 获取最小外接矩形面积
         void getContours(std::vector<std::vector<cv::Point>>& OutContours); // 获取区域轮廓
     private:
-        int m_width;
-        int m_height;
+        int m_width = 0;
+        int m_height = 0;
 
         std::vector<std::vector<cv::Point>> m_contours; // 区域轮廓
         cv::Point2f m_centroid;                         // 区域质心
@@ -33,8 +33,8 @@ namespace pcv
         cv::Rect m_boundingRect;                        // 外接矩形
         cv::RotatedRect m_minBoundingRect;              // 最小外接矩形
 
-        double m_regionArea;          // 区域面积
-        double m_minBoundingRectArea; // 最小外接矩形面积
+        double m_regionArea = 0.0;          // 区域面积
+        double m_minBoundingRectArea = 0.0; // 最小外接矩形面积
     };
 
     int connection(const cv::Mat &ThresMat, std::unordered_map<int, Region>& OutRegions);   // 分割连通域
