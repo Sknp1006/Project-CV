@@ -2,6 +2,8 @@
 #ifndef H_PCV_FACE
 #define H_PCV_FACE
 
+#include <algorithm>
+#include <cassert>
 #include <opencv2/core.hpp>
 #include <opencv2/objdetect.hpp>
 #include <opencv2/imgproc.hpp>
@@ -25,7 +27,7 @@ namespace pcv
                       nmsThreshold(NmsThreshold), topK(TopK), save(Save), vis(Vis) {}
                 ~Param() = default;
                 inline int getBackendId() const { return this->backendId; }
-                inline int getTragetId() const { return this->targetId; }
+                inline int getTargetId() const { return this->targetId; }
                 inline float getScoreThreshold() const { return this->scoreThreshold; }
                 inline float getNmsThreshold() const { return this->nmsThreshold; }
                 inline int getTopK() const { return this->topK; }
@@ -121,7 +123,7 @@ namespace pcv
                 ~FaceGroup() = default;
             };
 
-            FaceDetectorDNN(const std::string &ModelPath, FaceDetectorDNN::Param Param = FaceDetectorDNN::Param());
+            FaceDetectorDNN(const std::string &ModelPath, const FaceDetectorDNN::Param& Param = FaceDetectorDNN::Param());
             ~FaceDetectorDNN();
 
             void setInputSize(const cv::Size &Size);

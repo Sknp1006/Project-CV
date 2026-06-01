@@ -1,5 +1,7 @@
 #include "cv_face.h"
 #include "core/cv_core.h"
+#include <filesystem>
+#include <stdexcept>
 
 using namespace pcv::face;
 //--------------------------------------------------------------------------------------------------------------------------------------
@@ -18,16 +20,27 @@ using namespace pcv::face;
 /// @brief 构造函数
 /// @param ModelPath
 /// @param Param
-FaceDetectorDNN::FaceDetectorDNN(const std::string &ModelPath, FaceDetectorDNN::Param Param)
+FaceDetectorDNN::FaceDetectorDNN(const std::string &ModelPath, const FaceDetectorDNN::Param& Param)
 {
+    if (!std::filesystem::exists(ModelPath))
+    {
+        throw std::runtime_error("Face detection model file not found: " + ModelPath);
+    }
     int BackendId = Param.getBackendId();
-    int TargetId = Param.getTragetId();
+    int TargetId = Param.getTargetId();
     float ScoreThreshold = Param.getScoreThreshold();
     float NmsThreshold = Param.getNmsThreshold();
     int TopK = Param.getTopK();
     // bool Save = Param.getSave();
     // bool Vis = Param.getVis();
-    this->detector = cv::FaceDetectorYN::create(ModelPath, "", cv::Size(320, 320), ScoreThreshold, NmsThreshold, TopK, BackendId, TargetId);
+    try
+    {
+        this->detector = cv::FaceDetectorYN::create(ModelPath, "", cv::Size(320, 320), ScoreThreshold, NmsThreshold, TopK, BackendId, TargetId);
+    }
+    catch (const cv::Exception &e)
+    {
+        throw std::runtime_error("Failed to load face detection model: " + std::string(e.what()));
+    }
 }
 /// @brief 析构函数
 FaceDetectorDNN::~FaceDetectorDNN()
@@ -87,7 +100,7 @@ void FaceDetectorDNN::visualize(const cv::Mat &InMat, cv::Mat &OutMat, const Fac
         cv::circle(OutMat, aface.getRightEye(), static_cast<int>(faceRegion.width * 0.15), cv::Scalar(0, 0, 255), 1); // 右眼
         cv::circle(OutMat, aface.getNose(), static_cast<int>(faceRegion.width * 0.15), cv::Scalar(0, 255, 0), 1);     // 鼻子
 
-        cv::rectangle(OutMat, cv::Rect(static_cast<int>(aface.getLeftMouth().x), static_cast<int>(aface.getLeftMouth().y), static_cast<int>(aface.getRightMouth().x - aface.getLeftMouth().x), static_cast<int>(aface.getFaceRegion().height * 0.14)), cv::Scalar::all(255), 1); // 嘴巴
+        cv::rectangle(OutMat, cv::Rect(static_cast<int>(aface.getLeftMouth().x), static_cast<int>(aface.getLeftMouth().y), static_cast<int>(std::abs(aface.getRightMouth().x - aface.getLeftMouth().x)), static_cast<int>(aface.getFaceRegion().height * 0.14)), cv::Scalar::all(255), 1); // 嘴巴
         // cv::circle(output, aface.getLeftMouth(), faceRegion.width * 0.2, cv::Scalar(255, 0, 255), 1);   //嘴巴
         // cv::circle(output, aface.getRightMouth(), faceRegion.width * 0.2, cv::Scalar(0, 255, 255), 1);  //嘴巴
 
