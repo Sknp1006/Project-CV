@@ -63,7 +63,7 @@ namespace pcv
             }
         };
 
-        void calcGlcmMat(cv::Mat &GrayInMat, cv::Mat &GlcmMat, GLCM_TYPE GlcmType, GRAY_LEVEL GrayLevel = GRAY_LEVEL::GL_64);
+        void calcGlcmMat(const cv::Mat &GrayInMat, cv::Mat &GlcmMat, GLCM_TYPE GlcmType, GRAY_LEVEL GrayLevel = GRAY_LEVEL::GL_64);
         void calcGlcmData(const cv::Mat &GlcmMat, GLCMDATA &GlcmData);
 
         float calcContrast(const cv::Mat &GlcmMat);

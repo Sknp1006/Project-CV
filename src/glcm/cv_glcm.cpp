@@ -5,23 +5,26 @@
 
 namespace pcv::GLCM
 {
-    void calcGlcmMat(cv::Mat &GrayInMat, cv::Mat &GlcmMat, GLCM_TYPE GlcmType, GRAY_LEVEL GrayLevel)
+    void calcGlcmMat(const cv::Mat &GrayInMat, cv::Mat &GlcmMat, GLCM_TYPE GlcmType, GRAY_LEVEL GrayLevel)
     {
         // Step 1: Verify input type
         assert(!GrayInMat.empty() && "Input gray image is empty");
 
-        // Step 2: Resize gray levels
+        // Step 2: 内部拷贝，避免修改调用者的输入图像
+        cv::Mat grayClone = GrayInMat.clone();
+
+        // Step 3: Resize gray levels
         double minVal, maxVal;
-        cv::minMaxLoc(GrayInMat, &minVal, &maxVal);
+        cv::minMaxLoc(grayClone, &minVal, &maxVal);
         if (maxVal >= (int)GrayLevel)
         {
-            zoomGray(GrayInMat, (int)GrayLevel, false); // Scale to [0, GrayLevel) range
+            zoomGray(grayClone, (int)GrayLevel, false); // Scale to [0, GrayLevel) range
         }
 
-        // Step 3: Initialize GLCM matrix
+        // Step 4: Initialize GLCM matrix
         GlcmMat = cv::Mat::zeros((int)GrayLevel, (int)GrayLevel, CV_32F);
 
-        // Step 4: Calculate GLCM based on the direction
+        // Step 5: Calculate GLCM based on the direction
         int dx = 0, dy = 0;
         switch (GlcmType)
         {
@@ -45,22 +48,27 @@ namespace pcv::GLCM
             break;
         }
 
-        // Step 5: Traverse the image and update GLCM
-        for (int i = 0; i < GrayInMat.rows; ++i)
+        // Step 6: Traverse the image and update GLCM
+        for (int i = 0; i < grayClone.rows; ++i)
         {
-            for (int j = 0; j < GrayInMat.cols; ++j)
+            const uchar* row = grayClone.ptr<uchar>(i);
+            for (int j = 0; j < grayClone.cols; ++j)
             {
-                if (i + dy >= 0 && i + dy < GrayInMat.rows && j + dx >= 0 && j + dx < GrayInMat.cols)
+                if (i + dy >= 0 && i + dy < grayClone.rows && j + dx >= 0 && j + dx < grayClone.cols)
                 {
-                    int row = GrayInMat.at<uchar>(i, j);
-                    int col = GrayInMat.at<uchar>(i + dy, j + dx);
-                    GlcmMat.at<float>(row, col)++;
+                    int r = row[j];
+                    int c = grayClone.at<uchar>(i + dy, j + dx);
+                    GlcmMat.at<float>(r, c)++;
                 }
             }
         }
 
-        // Step 6: Normalize GLCM by dividing by total count
-        GlcmMat /= cv::sum(GlcmMat)[0];
+        // Step 7: Normalize GLCM by dividing by total count
+        double totalSum = cv::sum(GlcmMat)[0];
+        if (totalSum > 0.0)
+        {
+            GlcmMat /= static_cast<float>(totalSum);
+        }
     }
     /// @brief Calculate GLCM data
     /// @param GlcmMat
@@ -96,9 +104,10 @@ namespace pcv::GLCM
         float contrast = 0.0f;
         for (int i = 0; i < height; i++)
         {
+            const float* row = GlcmMat.ptr<float>(i);
             for (int j = 0; j < width; j++)
             {
-                contrast += (i - j) * (i - j) * GlcmMat.at<float>(i, j);
+                contrast += (i - j) * (i - j) * row[j];
             }
         }
         return contrast;
@@ -146,9 +155,10 @@ namespace pcv::GLCM
         float homogeneity = 0.0f;
         for (int i = 0; i < height; i++)
         {
+            const float* row = GlcmMat.ptr<float>(i);
             for (int j = 0; j < width; j++)
             {
-                homogeneity += GlcmMat.at<float>(i, j) / (1 + std::abs(i - j));
+                homogeneity += row[j] / (1 + std::abs(i - j));
             }
         }
         return homogeneity;
@@ -223,9 +233,10 @@ namespace pcv::GLCM
         float energy = 0.0f;
         for (int i = 0; i < height; i++)
         {
+            const float* row = GlcmMat.ptr<float>(i);
             for (int j = 0; j < width; j++)
             {
-                energy += GlcmMat.at<float>(i, j) * GlcmMat.at<float>(i, j);
+                energy += row[j] * row[j];
             }
         }
         return energy;
@@ -248,9 +259,10 @@ namespace pcv::GLCM
         float idmoment = 0.0f;
         for (int i = 0; i < height; i++)
         {
+            const float* row = GlcmMat.ptr<float>(i);
             for (int j = 0; j < width; j++)
             {
-                idmoment += GlcmMat.at<float>(i, j) / (1 + (i - j) * (i - j));
+                idmoment += row[j] / (1 + (i - j) * (i - j));
             }
         }
         return idmoment;
@@ -273,9 +285,10 @@ namespace pcv::GLCM
         float maxProbability = 0.0f;
         for (int i = 0; i < height; i++)
         {
+            const float* row = GlcmMat.ptr<float>(i);
             for (int j = 0; j < width; j++)
             {
-                maxProbability = std::max(maxProbability, GlcmMat.at<float>(i, j));
+                maxProbability = std::max(maxProbability, row[j]);
             }
         }
         return maxProbability;
